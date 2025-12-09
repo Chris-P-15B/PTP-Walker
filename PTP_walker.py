@@ -9,6 +9,7 @@ discover upstream devices. It captures PTP & interface information, then display
 finds to aid troubleshooting.
 Works with Arista EOS & Cisco NX-OS.
 
+v0.2 - Fixed typos & improved formatting of output.
 v0.1 - Initial development release.
 """
 
@@ -245,7 +246,7 @@ def main():
                     f"Steps removed: {ptp_steps}"
                 )
                 if tshoot_output:
-                    print("Possible Issues:")
+                    print("\nPossible Issues:")
                     print(tshoot_output)
                     tshoot_output = ""
 
@@ -267,7 +268,7 @@ def main():
                     # Check for interface flaps, errors or discards
                     cli_output = device.send_command(f"show interface {intf}")
                     for line in cli_output.splitlines():
-                        flapped = re.search(r"Last link flapped ([\w:]+)", line)
+                        flapped = re.search(r"Last link flapped\s+([\w:]+)", line)
                         if flapped:
                             tshoot_output = cli_output
                             break
@@ -315,7 +316,7 @@ def main():
                             break
 
                     if tshoot_output:
-                        print("Possible Issues:")
+                        print("Possible Issues in Interface Statistics:")
                         print(tshoot_output)
 
                 # Check PTP slave interface configuration, find port-channel member interfaces (if applicable)
@@ -394,7 +395,7 @@ def main():
                             break
 
                     if tshoot_output:
-                        print("Possible Issues:")
+                        print("Possible Issues in Interface Statistics:")
                         print(tshoot_output)
 
                 # Grab LLDP neighbours & parse, noting the interfaces the upstream device connected to us
@@ -538,7 +539,7 @@ def main():
                 cli_output = device.send_command("show ptp monitor")
                 for line in cli_output.splitlines():
                     offset_path_delay = re.search(
-                        r"Et\d+(\/\d+)?|Po\d+)\s+([\w:\.]+\s){5}\s+(\-?\d+)\s+(\d+)",
+                        r"(Et\d+(\/\d+)?|Po\d+)\s+([\w:\.]+\s){5}\s+(\-?\d+)\s+(\d+)",
                         line,
                     )
                     offset = offset_path_delay.group(4) if offset_path_delay else ""
@@ -573,7 +574,7 @@ def main():
                     f"Steps removed: {ptp_steps}"
                 )
                 if tshoot_output:
-                    print("Possible Issues:")
+                    print("\nPossible Issues:")
                     print(tshoot_output)
                     tshoot_output = ""
 
@@ -632,7 +633,7 @@ def main():
                             break
 
                     if tshoot_output:
-                        print("Possible Issues:")
+                        print("Possible Issues in Interface Statistics:")
                         print(tshoot_output)
 
                 # Check PTP slave interface configuration, find port-channel member interfaces (if applicable)
@@ -700,7 +701,7 @@ def main():
                             break
 
                     if tshoot_output:
-                        print("Possible Issues:")
+                        print("Possible Issues in Interface Statistics:")
                         print(tshoot_output)
 
                 # Grab LLDP neighbours & parse, noting the interfaces the upstream device connected to us
