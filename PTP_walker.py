@@ -9,6 +9,7 @@ discover upstream devices. It captures PTP & interface information, then display
 finds to aid troubleshooting.
 Works with Arista EOS & Cisco NX-OS.
 
+v0.3 - Bug fixes.
 v0.2 - Fixed typos & improved formatting of output.
 v0.1 - Initial development release.
 """
@@ -277,43 +278,78 @@ def main():
                             line,
                         )
                         if input_errors:
-                            tshoot_output = cli_output
-                            break
+                            if (
+                                input_errors.group(1) != "0"
+                                or input_errors.group(2) != "0"
+                                or input_errors.group(3) != "0"
+                                or input_errors.group(4) != "0"
+                            ):
+                                tshoot_output = cli_output
+                                break
                         input_errors = re.search(
                             r"(\d+) input error\s+(\d+) short frame\s+(\d+) overrun\s+(\d+) underrun\s+(\d+) ignored",
                             line,
                         )
                         if input_errors:
-                            tshoot_output = cli_output
-                            break
+                            if (
+                                input_errors.group(1) != "0"
+                                or input_errors.group(2) != "0"
+                                or input_errors.group(3) != "0"
+                                or input_errors.group(4) != "0"
+                                or input_errors.group(5) != "0"
+                            ):
+                                tshoot_output = cli_output
+                                break
                         input_errors = re.search(
                             r"(\d+) watchdog\s+(\d+) bad etype drop\s+(\d+) bad proto drop\s+(\d+) if down drop",
                             line,
                         )
                         if input_errors:
-                            tshoot_output = cli_output
-                            break
+                            if (
+                                input_errors.group(1) != "0"
+                                or input_errors.group(2) != "0"
+                                or input_errors.group(3) != "0"
+                                or input_errors.group(4) != "0"
+                            ):
+                                tshoot_output = cli_output
+                                break
                         input_errors = re.search(
                             r"(\d+) input with dribble\s+(\d+) input discard",
                             line,
                         )
                         if input_errors:
-                            tshoot_output = cli_output
-                            break
+                            if (
+                                input_errors.group(1) != "0"
+                                or input_errors.group(2) != "0"
+                            ):
+                                tshoot_output = cli_output
+                                break
                         output_errors = re.search(
                             r"(\d+) output error\s+(\d+) collision\s+(\d+) deferred\s+(\d+) late collision",
                             line,
                         )
                         if output_errors:
-                            tshoot_output = cli_output
-                            break
+                            if (
+                                output_errors.group(1) != "0"
+                                or output_errors.group(2) != "0"
+                                or output_errors.group(3) != "0"
+                                or output_errors.group(4) != "0"
+                            ):
+                                tshoot_output = cli_output
+                                break
                         output_errors = re.search(
                             r"(\d+) lost carrier\s+(\d+) no carrier\s+(\d+) babble\s+(\d+) output discard",
                             line,
                         )
                         if output_errors:
-                            tshoot_output = cli_output
-                            break
+                            if (
+                                output_errors.group(1) != "0"
+                                or output_errors.group(2) != "0"
+                                or output_errors.group(3) != "0"
+                                or output_errors.group(4) != "0"
+                            ):
+                                tshoot_output = cli_output
+                                break
 
                     if tshoot_output:
                         print("Possible Issues in Interface Statistics:")
@@ -356,43 +392,78 @@ def main():
                             line,
                         )
                         if input_errors:
-                            tshoot_output = cli_output
-                            break
+                            if (
+                                input_errors.group(1) != "0"
+                                or input_errors.group(2) != "0"
+                                or input_errors.group(3) != "0"
+                                or input_errors.group(4) != "0"
+                            ):
+                                tshoot_output = cli_output
+                                break
                         input_errors = re.search(
                             r"(\d+) input error\s+(\d+) short frame\s+(\d+) overrun\s+(\d+) underrun\s+(\d+) ignored",
                             line,
                         )
                         if input_errors:
-                            tshoot_output = cli_output
-                            break
+                            if (
+                                input_errors.group(1) != "0"
+                                or input_errors.group(2) != "0"
+                                or input_errors.group(3) != "0"
+                                or input_errors.group(4) != "0"
+                                or input_errors.group(5) != "0"
+                            ):
+                                tshoot_output = cli_output
+                                break
                         input_errors = re.search(
                             r"(\d+) watchdog\s+(\d+) bad etype drop\s+(\d+) bad proto drop\s+(\d+) if down drop",
                             line,
                         )
                         if input_errors:
-                            tshoot_output = cli_output
-                            break
+                            if (
+                                input_errors.group(1) != "0"
+                                or input_errors.group(2) != "0"
+                                or input_errors.group(3) != "0"
+                                or input_errors.group(4) != "0"
+                            ):
+                                tshoot_output = cli_output
+                                break
                         input_errors = re.search(
                             r"(\d+) input with dribble\s+(\d+) input discard",
                             line,
                         )
                         if input_errors:
-                            tshoot_output = cli_output
-                            break
+                            if (
+                                input_errors.group(1) != "0"
+                                or input_errors.group(2) != "0"
+                            ):
+                                tshoot_output = cli_output
+                                break
                         output_errors = re.search(
                             r"(\d+) output error\s+(\d+) collision\s+(\d+) deferred\s+(\d+) late collision",
                             line,
                         )
                         if output_errors:
-                            tshoot_output = cli_output
-                            break
+                            if (
+                                output_errors.group(1) != "0"
+                                or output_errors.group(2) != "0"
+                                or output_errors.group(3) != "0"
+                                or output_errors.group(4) != "0"
+                            ):
+                                tshoot_output = cli_output
+                                break
                         output_errors = re.search(
                             r"(\d+) lost carrier\s+(\d+) no carrier\s+(\d+) babble\s+(\d+) output discard",
                             line,
                         )
                         if output_errors:
-                            tshoot_output = cli_output
-                            break
+                            if (
+                                output_errors.group(1) != "0"
+                                or output_errors.group(2) != "0"
+                                or output_errors.group(3) != "0"
+                                or output_errors.group(4) != "0"
+                            ):
+                                tshoot_output = cli_output
+                                break
 
                     if tshoot_output:
                         print("Possible Issues in Interface Statistics:")
@@ -608,29 +679,49 @@ def main():
                             line,
                         )
                         if input_errors:
-                            tshoot_output = cli_output
-                            break
+                            if (
+                                input_errors.group(1) != "0"
+                                or input_errors.group(2) != "0"
+                            ):
+                                tshoot_output = cli_output
+                                break
                         input_errors = re.search(
                             r"(\d+) input errors, (\d+) CRC, (\d+) alignment, (\d+) symbol, (\d+) input discards",
                             line,
                         )
                         if input_errors:
-                            tshoot_output = cli_output
-                            break
+                            if (
+                                input_errors.group(1) != "0"
+                                or input_errors.group(2) != "0"
+                                or input_errors.group(3) != "0"
+                                or input_errors.group(4) != "0"
+                                or input_errors.group(5) != "0"
+                            ):
+                                tshoot_output = cli_output
+                                break
                         output_errors = re.search(
                             r"(\d+) output errors, (\d+) collisions",
                             line,
                         )
                         if output_errors:
-                            tshoot_output = cli_output
-                            break
+                            if (
+                                output_errors.group(1) != "0"
+                                or output_errors.group(2) != "0"
+                            ):
+                                tshoot_output = cli_output
+                                break
                         output_errors = re.search(
                             r"(\d+) late collision, (\d+) deferred, (\d+) output discards",
                             line,
                         )
                         if output_errors:
-                            tshoot_output = cli_output
-                            break
+                            if (
+                                output_errors.group(1) != "0"
+                                or output_errors.group(2) != "0"
+                                or output_errors.group(3) != "0"
+                            ):
+                                tshoot_output = cli_output
+                                break
 
                     if tshoot_output:
                         print("Possible Issues in Interface Statistics:")
@@ -676,29 +767,49 @@ def main():
                             line,
                         )
                         if input_errors:
-                            tshoot_output = cli_output
-                            break
+                            if (
+                                input_errors.group(1) != "0"
+                                or input_errors.group(2) != "0"
+                            ):
+                                tshoot_output = cli_output
+                                break
                         input_errors = re.search(
                             r"(\d+) input errors, (\d+) CRC, (\d+) alignment, (\d+) symbol, (\d+) input discards",
                             line,
                         )
                         if input_errors:
-                            tshoot_output = cli_output
-                            break
+                            if (
+                                input_errors.group(1) != "0"
+                                or input_errors.group(2) != "0"
+                                or input_errors.group(3) != "0"
+                                or input_errors.group(4) != "0"
+                                or input_errors.group(5) != "0"
+                            ):
+                                tshoot_output = cli_output
+                                break
                         output_errors = re.search(
                             r"(\d+) output errors, (\d+) collisions",
                             line,
                         )
                         if output_errors:
-                            tshoot_output = cli_output
-                            break
+                            if (
+                                output_errors.group(1) != "0"
+                                or output_errors.group(2) != "0"
+                            ):
+                                tshoot_output = cli_output
+                                break
                         output_errors = re.search(
                             r"(\d+) late collision, (\d+) deferred, (\d+) output discards",
                             line,
                         )
                         if output_errors:
-                            tshoot_output = cli_output
-                            break
+                            if (
+                                output_errors.group(1) != "0"
+                                or output_errors.group(2) != "0"
+                                or output_errors.group(3) != "0"
+                            ):
+                                tshoot_output = cli_output
+                                break
 
                     if tshoot_output:
                         print("Possible Issues in Interface Statistics:")
