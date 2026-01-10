@@ -367,7 +367,7 @@ def main():
                                 break
 
                     if tshoot_output:
-                        print("Possible Issues in Interface Statistics:")
+                        print("\nPossible Issues in Interface Statistics:")
                         print(tshoot_output)
 
                     # Check ethernet interface config for required PTP commands
@@ -382,12 +382,11 @@ def main():
                             ptp_commands = [
                                 x for x in NXOS_PTP_COMMANDS if x not in ptp_commands
                             ]
-                            print("Missing PTP Interface Commands:")
+                            print("\nMissing PTP Interface Commands:")
                             print(f"{'\n'.join(ptp_commands)}")
 
                 print("\nPTP Upstream Interface(s):")
                 for intf in upstream_intf:
-                    print(f"\n{intf}")
                     # Check for interface flaps, errors or discards
                     cli_output = device.send_command(f"show interface {intf}")
                     int_description = re.search(r"Description: (.+)\n", cli_output)
@@ -480,7 +479,7 @@ def main():
                                 break
 
                     if tshoot_output:
-                        print("Possible Issues in Interface Statistics:")
+                        print("\nPossible Issues in Interface Statistics:")
                         print(tshoot_output)
 
                     # Check ethernet interface config for required PTP commands
@@ -495,7 +494,7 @@ def main():
                             ptp_commands = [
                                 x for x in NXOS_PTP_COMMANDS if x not in ptp_commands
                             ]
-                            print("Missing PTP Interface Commands:")
+                            print("\nMissing PTP Interface Commands:")
                             print(f"{'\n'.join(ptp_commands)}")
 
                 # Grab LLDP neighbours & parse, noting the interfaces the upstream device connected to us
@@ -697,7 +696,6 @@ def main():
 
                 print("\nPTP Downstream Interface(s):")
                 for intf in downstream_intf:
-                    print(f"\n{intf}")
                     # Check for interface flaps, errors or discards
                     cli_output = device.send_command(f"show interface {intf}")
                     int_description = re.search(r"Description: (.+)\n", cli_output)
@@ -764,7 +762,7 @@ def main():
                                 break
 
                     if tshoot_output:
-                        print("Possible Issues in Interface Statistics:")
+                        print("\nPossible Issues in Interface Statistics:")
                         print(tshoot_output)
 
                     # Check ethernet or port-channel interface config for required PTP commands
@@ -780,7 +778,7 @@ def main():
                             ptp_commands = [
                                 x for x in EOS_PTP_COMMANDS if x not in ptp_commands
                             ]
-                            print("Missing PTP Interface Commands:")
+                            print("\nMissing PTP Interface Commands:")
                             print(f"{'\n'.join(ptp_commands)}")
 
                 # Check PTP slave interface configuration, find port-channel member interfaces (if applicable)
@@ -801,7 +799,6 @@ def main():
 
                 print("\nPTP Upstream Interface(s):")
                 for intf in upstream_intf:
-                    print(f"\n{intf}")
                     # Check for interface flaps, errors or discards
                     cli_output = device.send_command(f"show interface {intf}")
                     int_description = re.search(r"Description: (.+)\n", cli_output)
@@ -868,7 +865,7 @@ def main():
                                 break
 
                     if tshoot_output:
-                        print("Possible Issues in Interface Statistics:")
+                        print("\nPossible Issues in Interface Statistics:")
                         print(tshoot_output)
 
                     # Check ethernet or port-channel interface config for required PTP commands
@@ -884,7 +881,7 @@ def main():
                             ptp_commands = [
                                 x for x in EOS_PTP_COMMANDS if x not in ptp_commands
                             ]
-                            print("Missing PTP Interface Commands:")
+                            print("\nMissing PTP Interface Commands:")
                             print(f"{'\n'.join(ptp_commands)}")
 
                 # Grab LLDP neighbours & parse, noting the interfaces the upstream device connected to us
