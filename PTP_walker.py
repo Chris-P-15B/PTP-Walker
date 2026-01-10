@@ -375,7 +375,7 @@ def main():
                         cli_output = device.send_command(f"show run interface {intf}")
                         ptp_commands = [
                             x.strip()
-                            for x in cli_output
+                            for x in cli_output.splitlines()
                             if x.strip() in NXOS_PTP_COMMANDS
                         ]
                         if len(ptp_commands) != len(NXOS_PTP_COMMANDS):
@@ -488,7 +488,7 @@ def main():
                         cli_output = device.send_command(f"show run interface {intf}")
                         ptp_commands = [
                             x.strip()
-                            for x in cli_output
+                            for x in cli_output.splitlines()
                             if x.strip() in NXOS_PTP_COMMANDS
                         ]
                         if len(ptp_commands) != len(NXOS_PTP_COMMANDS):
@@ -541,7 +541,7 @@ def main():
             elif best_match == "arista_eos":
                 # Grab PTP interfaces
                 upstream_intf = []
-                cli_output = device.send_command("show ptp brief")
+                cli_output = device.send_command("show ptp")
                 for line in cli_output.splitlines():
                     intf = re.search(r"(Et\d+(\/\d+)?|Po\d+)(,[\s\w]+)?\s+Slave", line)
                     if intf:
@@ -773,7 +773,7 @@ def main():
                     if not port_channel:
                         ptp_commands = [
                             x.strip()
-                            for x in cli_output
+                            for x in cli_output.splitlines()
                             if x.strip() in EOS_PTP_COMMANDS
                         ]
                         if len(ptp_commands) != len(EOS_PTP_COMMANDS):
@@ -877,7 +877,7 @@ def main():
                     if not port_channel:
                         ptp_commands = [
                             x.strip()
-                            for x in cli_output
+                            for x in cli_output.splitlines()
                             if x.strip() in EOS_PTP_COMMANDS
                         ]
                         if len(ptp_commands) != len(EOS_PTP_COMMANDS):
