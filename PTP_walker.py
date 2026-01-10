@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 
 """
-Copyright (c) 2025, Chris Perkins
+Copyright (c) 2025 - 2026, Chris Perkins
 Licence: BSD 3-Clause
 
 From a given seed device, walks up the PTP Slave port path towards the Grand Master, using LLDP to
-discover upstream devices. It captures PTP & interface information, then displays any concerns it
-finds to aid troubleshooting.
+discover upstream devices. It captures PTP & interface information, then displays any possible
+concerns it finds to aid troubleshooting.
 Works with Arista EOS & Cisco NX-OS.
 
+v0.4 - Bug fixes & added PTP interface commands check.
 v0.3 - Bug fixes.
 v0.2 - Fixed typos & improved formatting of output.
 v0.1 - Initial development release.
@@ -31,6 +32,11 @@ MAX_MEAN_PATH_DELAY = 1500
 MAX_ACCURACY = 39
 SYNCHED_CLOCK_CLASS = ["6", "13"]
 HOLDOVER_CLOCK_CLASS = ["7", "14"]
+
+# List of interface commands for PTP that should be present
+# For example ["ptp", "ptp delay-request minimum interval 3", "ptp announce interval 2", "ptp sync interval 0"]
+NXOS_PTP_COMMANDS = ["ptp"]
+EOS_PTP_COMMANDS = ["ptp enable"]
 
 
 def guess_device_type(remote_device):
@@ -110,18 +116,22 @@ def main():
             ) = ptp_priority2 = ptp_path_delay = ptp_offset = ptp_steps = (
                 tshoot_output
             ) = ""
+
             # Cisco NX-OS
             if best_match == "cisco_nxos":
-                # Grab PTP slave interface
-                upstream_intf = ""
+                # Grab PTP interfaces
+                upstream_intf = []
                 cli_output = device.send_command("show ptp brief")
                 for line in cli_output.splitlines():
-                    upstream_intf = re.search(
-                        r"(Eth\d+\/\d+(\/\d+)?|Po\d+)\s+Slave", line
-                    )
-                    if upstream_intf:
-                        upstream_intf = [upstream_intf.group(1).upper()]
-                        break
+                    intf = re.search(r"(Eth\d+\/\d+(\/\d+)?|Po\d+)\s+Slave", line)
+                    if intf:
+                        upstream_intf.append(intf.group(1).upper())
+
+                    # First switch only, check all Master ports
+                    if ptp_hops == 0:
+                        intf = re.search(r"(Eth\d+\/\d+(\/\d+)?|Po\d+)\s+Master", line)
+                        if intf:
+                            downstream_intf.append(intf.group(1).upper())
 
                 # Sanity check
                 if not upstream_intf:
@@ -265,9 +275,14 @@ def main():
 
                 print("\nPTP Downstream Interface(s):")
                 for intf in downstream_intf:
-                    print(f"\n{intf}")
                     # Check for interface flaps, errors or discards
                     cli_output = device.send_command(f"show interface {intf}")
+                    int_description = re.search(r"Description: (.+)\n", cli_output)
+                    int_description = (
+                        int_description.group(1).rstrip() if int_description else ""
+                    )
+                    print(f"\n{intf} '{int_description}'")
+
                     for line in cli_output.splitlines():
                         flapped = re.search(r"Last link flapped\s+([\w:]+)", line)
                         if flapped:
@@ -355,33 +370,32 @@ def main():
                         print("Possible Issues in Interface Statistics:")
                         print(tshoot_output)
 
-                # Check PTP slave interface configuration, find port-channel member interfaces (if applicable)
-                if "PO" in upstream_intf[0]:
-                    port_channel = re.search(r"(\d+)", upstream_intf[0])
-                    port_channel = port_channel.group(1) if port_channel else ""
-                else:
-                    cli_output = device.send_command(
-                        f"show run interface {upstream_intf[0]}"
-                    )
-                    port_channel = re.search(r"channel-group (\d+)", cli_output)
-                    port_channel = port_channel.group(1) if port_channel else ""
-
-                if port_channel:
-                    cli_output = device.send_command(
-                        f"show port-channel summary interface po{port_channel}"
-                    )
-                    for line in cli_output.splitlines():
-                        if re.search(r"(Eth\d+\/\d+(\/\d+)?)", line):
-                            for member_port in line.split():
-                                if "Ethernet" in member_port:
-                                    if member_port.upper() not in upstream_intf:
-                                        upstream_intf.append(member_port.upper())
+                    # Check ethernet interface config for required PTP commands
+                    if intf[0][:2] == "ET":
+                        cli_output = device.send_command(f"show run interface {intf}")
+                        ptp_commands = [
+                            x.strip()
+                            for x in cli_output
+                            if x.strip() in NXOS_PTP_COMMANDS
+                        ]
+                        if len(ptp_commands) != len(NXOS_PTP_COMMANDS):
+                            ptp_commands = [
+                                x for x in NXOS_PTP_COMMANDS if x not in ptp_commands
+                            ]
+                            print("Missing PTP Interface Commands:")
+                            print(f"{'\n'.join(ptp_commands)}")
 
                 print("\nPTP Upstream Interface(s):")
                 for intf in upstream_intf:
                     print(f"\n{intf}")
                     # Check for interface flaps, errors or discards
                     cli_output = device.send_command(f"show interface {intf}")
+                    int_description = re.search(r"Description: (.+)\n", cli_output)
+                    int_description = (
+                        int_description.group(1).rstrip() if int_description else ""
+                    )
+                    print(f"\n{intf} '{int_description}'")
+
                     for line in cli_output.splitlines():
                         flapped = re.search(r"Last link flapped ([\w:]+)", line)
                         if flapped:
@@ -469,10 +483,25 @@ def main():
                         print("Possible Issues in Interface Statistics:")
                         print(tshoot_output)
 
+                    # Check ethernet interface config for required PTP commands
+                    if intf[0][:2] == "ET":
+                        cli_output = device.send_command(f"show run interface {intf}")
+                        ptp_commands = [
+                            x.strip()
+                            for x in cli_output
+                            if x.strip() in NXOS_PTP_COMMANDS
+                        ]
+                        if len(ptp_commands) != len(NXOS_PTP_COMMANDS):
+                            ptp_commands = [
+                                x for x in NXOS_PTP_COMMANDS if x not in ptp_commands
+                            ]
+                            print("Missing PTP Interface Commands:")
+                            print(f"{'\n'.join(ptp_commands)}")
+
                 # Grab LLDP neighbours & parse, noting the interfaces the upstream device connected to us
-                if [x for x in upstream_intf if x[:2] == "PO"]:
+                if [x for x in upstream_intf if x[:2] == "ET"]:
                     cli_output = device.send_command(
-                        f"show lldp neighbors interface {','.join([x for x in upstream_intf if x[:2] == 'PO'])}"
+                        f"show lldp neighbors interface {','.join([x for x in upstream_intf if x[:2] == 'ET'])}"
                     )
 
                     # Find column heading line
@@ -510,16 +539,21 @@ def main():
 
             # Arista EOS
             elif best_match == "arista_eos":
-                # Grab PTP slave interface
-                upstream_intf = ""
-                cli_output = device.send_command("show ptp")
+                # Grab PTP interfaces
+                upstream_intf = []
+                cli_output = device.send_command("show ptp brief")
                 for line in cli_output.splitlines():
-                    upstream_intf = re.search(
-                        r"(Et\d+(\/\d+)?|Po\d+)(,[\s\w]+)?\s+Slave", line
-                    )
-                    if upstream_intf:
-                        upstream_intf = [upstream_intf.group(1).upper()]
-                        break
+                    intf = re.search(r"(Et\d+(\/\d+)?|Po\d+)(,[\s\w]+)?\s+Slave", line)
+                    if intf:
+                        upstream_intf.append(intf.group(1).upper())
+
+                    # First switch only, check all Master ports
+                    if ptp_hops == 0:
+                        intf = re.search(
+                            r"(Et\d+(\/\d+)?|Po\d+)(,[\s\w]+)?\s+Master", line
+                        )
+                        if intf:
+                            downstream_intf.append(intf.group(1).upper())
 
                 # Sanity check
                 if not upstream_intf:
@@ -666,6 +700,12 @@ def main():
                     print(f"\n{intf}")
                     # Check for interface flaps, errors or discards
                     cli_output = device.send_command(f"show interface {intf}")
+                    int_description = re.search(r"Description: (.+)\n", cli_output)
+                    int_description = (
+                        int_description.group(1).rstrip() if int_description else ""
+                    )
+                    print(f"\n{intf} '{int_description}'")
+
                     for line in cli_output.splitlines():
                         flapped = re.search(
                             r"(\d+) link status changes since last clear", line
@@ -727,33 +767,49 @@ def main():
                         print("Possible Issues in Interface Statistics:")
                         print(tshoot_output)
 
+                    # Check ethernet or port-channel interface config for required PTP commands
+                    cli_output = device.send_command(f"show run interface {intf}")
+                    port_channel = re.search(r"channel-group (\d+)", cli_output)
+                    if not port_channel:
+                        ptp_commands = [
+                            x.strip()
+                            for x in cli_output
+                            if x.strip() in EOS_PTP_COMMANDS
+                        ]
+                        if len(ptp_commands) != len(EOS_PTP_COMMANDS):
+                            ptp_commands = [
+                                x for x in EOS_PTP_COMMANDS if x not in ptp_commands
+                            ]
+                            print("Missing PTP Interface Commands:")
+                            print(f"{'\n'.join(ptp_commands)}")
+
                 # Check PTP slave interface configuration, find port-channel member interfaces (if applicable)
-                if "PO" in upstream_intf[0]:
-                    port_channel = re.search(r"(\d+)", upstream_intf[0])
-                    port_channel = port_channel.group(1) if port_channel else ""
-                else:
+                if upstream_intf[0][:2] == "PO":
                     cli_output = device.send_command(
                         f"show run interface {upstream_intf[0]}"
                     )
-                    port_channel = re.search(r"channel-group (\d+)", cli_output)
-                    port_channel = port_channel.group(1) if port_channel else ""
-
-                if port_channel:
-                    cli_output = device.send_command(
-                        f"show port-channel {port_channel} brief"
-                    )
                     for line in cli_output.splitlines():
-                        if re.search(r"(Ethernet\d+(\/\d+)?)", line):
-                            for member_port in line.split():
-                                if "Ethernet" in member_port:
-                                    if member_port.upper() not in upstream_intf:
-                                        upstream_intf.append(member_port.upper())
+                        member_port = re.search(
+                            r"Transmit member: (Ethernet\d+(\/\d+)?)", line
+                        )
+                        member_port = (
+                            member_port.group(1).upper() if member_port else ""
+                        )
+                        if member_port:
+                            if member_port not in upstream_intf:
+                                upstream_intf.append(member_port)
 
                 print("\nPTP Upstream Interface(s):")
                 for intf in upstream_intf:
                     print(f"\n{intf}")
                     # Check for interface flaps, errors or discards
                     cli_output = device.send_command(f"show interface {intf}")
+                    int_description = re.search(r"Description: (.+)\n", cli_output)
+                    int_description = (
+                        int_description.group(1).rstrip() if int_description else ""
+                    )
+                    print(f"\n{intf} '{int_description}'")
+
                     for line in cli_output.splitlines():
                         flapped = re.search(
                             r"(\d+) link status changes since last clear", line
@@ -814,6 +870,22 @@ def main():
                     if tshoot_output:
                         print("Possible Issues in Interface Statistics:")
                         print(tshoot_output)
+
+                    # Check ethernet or port-channel interface config for required PTP commands
+                    cli_output = device.send_command(f"show run interface {intf}")
+                    port_channel = re.search(r"channel-group (\d+)", cli_output)
+                    if not port_channel:
+                        ptp_commands = [
+                            x.strip()
+                            for x in cli_output
+                            if x.strip() in EOS_PTP_COMMANDS
+                        ]
+                        if len(ptp_commands) != len(EOS_PTP_COMMANDS):
+                            ptp_commands = [
+                                x for x in EOS_PTP_COMMANDS if x not in ptp_commands
+                            ]
+                            print("Missing PTP Interface Commands:")
+                            print(f"{'\n'.join(ptp_commands)}")
 
                 # Grab LLDP neighbours & parse, noting the interfaces the upstream device connected to us
                 if [x for x in upstream_intf if x[:2] == "ET"]:
