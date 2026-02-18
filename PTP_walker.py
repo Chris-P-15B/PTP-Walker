@@ -245,7 +245,7 @@ def check_ptp_nxos(
         except ValueError:
             continue
         else:
-            if offset and path_delay:
+            if offset_path_delay:
                 if (
                     offset > MAX_OFFSET
                     or offset < -MAX_OFFSET
@@ -593,7 +593,7 @@ def check_ptp_eos(
         except ValueError:
             continue
         else:
-            if offset and path_delay:
+            if offset_path_delay:
                 if (
                     offset > MAX_OFFSET
                     or offset < -MAX_OFFSET
